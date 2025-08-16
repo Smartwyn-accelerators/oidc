@@ -1,0 +1,49 @@
+version,display_name,name
+0,Create app,CREATE_APP
+0,Delete created app,DELETE_CREATED_APP
+0,Edit created app,EDIT_CREATED_APP
+0,Update created app,UPDATE_CREATED_APP
+0,View created app,VIEW_CREATED_APP
+0,Delete assigned app,DELETE_ASSIGNED_APP
+0,Edit assigned app,EDIT_ASSIGNED_APP
+0,Update assigned app,UPDATE_ASSIGNED_APP
+0,View assigned app,VIEW_ASSIGNED_APP
+0,Create app in any workspace,CREATE_APP_IN_ANY_WORKSPACE
+0,Create app in assigned workspace,CREATE_APP_IN_ASSIGNED_WORKSPACE
+0,Delete non-created non-assigned app,DELETE_NON_CREATED_NON_ASSIGNED_APP
+0,Edit non-created non-assigned app,EDIT_NON_CREATED_NON_ASSIGNED_APP
+0,Update non-created non-assigned app,UPDATE_NON_CREATED_NON_ASSIGNED_APP
+0,View non-created non-assigned app,VIEW_NON_CREATED_NON_ASSIGNED_APP
+0,create role,ROLEENTITY_CREATE
+0,read role,ROLEENTITY_READ
+0,delete role,ROLEENTITY_DELETE
+0,update role,ROLEENTITY_UPDATE
+0,create permission,PERMISSIONENTITY_CREATE
+0,read permission,PERMISSIONENTITY_READ
+0,delete permission,PERMISSIONENTITY_DELETE
+0,update permission,PERMISSIONENTITY_UPDATE
+0,create rolepermission,ROLEPERMISSIONENTITY_CREATE
+0,read rolepermission,ROLEPERMISSIONENTITY_READ
+0,delete rolepermission,ROLEPERMISSIONENTITY_DELETE
+0,update rolepermission,ROLEPERMISSIONENTITY_UPDATE
+0,create user,USERENTITY_CREATE
+0,read user,USERENTITY_READ
+0,delete user,USERENTITY_DELETE
+0,update user,USERENTITY_UPDATE
+0,create userpermission,USERPERMISSIONENTITY_CREATE
+0,read userpermission,USERPERMISSIONENTITY_READ
+0,delete userpermission,USERPERMISSIONENTITY_DELETE
+0,update userpermission,USERPERMISSIONENTITY_UPDATE
+0,create userrole,USERROLEENTITY_CREATE
+0,read userrole,USERROLEENTITY_READ
+0,delete userrole,USERROLEENTITY_DELETE
+0,update userrole,USERROLEENTITY_UPDATE
+0,Grant application to user,GRANT_APPLICATIONUSER_ACCESS
+0,Revoke application from user,REVOKE_APPLICATIONUSER_ACCESS
+0,Configure Git accounts,CONFIGURE_GIT
+0,List all workspaces,LIST_ALL_WORKSPACES
+0,Create Workspace,WORKSPACE_CREATE
+0,Delete Workspace,WORKSPACE_DELETE
+0,Update Workspace,WORKSPACE_UPDATE
+0,Assign workspace to user,ASSIGN_WORKSPACEUSER
+0,Remove workspace from user,REMOVE_WORKSPACEUSER
