@@ -1,6 +1,8 @@
 package com.fastcode.oidc.application.userrole;
 
 import com.fastcode.oidc.application.user.IUserAppService;
+import com.fastcode.oidc.application.user.IUserMapper;
+import com.fastcode.oidc.application.user.dto.FindUserByIdOutput;
 import com.fastcode.oidc.application.userrole.dto.*;
 import com.fastcode.oidc.commons.logging.AuthLoggingHelper;
 import com.fastcode.oidc.commons.search.*;
@@ -44,6 +46,9 @@ public class UserroleAppService implements IUserroleAppService {
 
 	@Autowired
 	private IUserroleMapper mapper;
+
+	@Autowired
+	private IUserMapper userMapper;
 
 	@Autowired
 	private AuthLoggingHelper logHelper;
@@ -179,6 +184,22 @@ public class UserroleAppService implements IUserroleAppService {
 
 		while (userroleIterator.hasNext()) {
 			output.add(mapper.userroleEntityToFindUserroleByIdOutput(userroleIterator.next()));
+		}
+		return output;
+	}
+
+	@Override
+	public List<FindUserByIdOutput> findByRole(String role) throws Exception {
+		QUserroleEntity userrole= QUserroleEntity.userroleEntity;
+		BooleanBuilder builder = new BooleanBuilder();
+		builder.and(userrole.role.name.eq(role));
+		Page<UserroleEntity> foundUserrole = _userroleManager.findAll(builder, Pageable.unpaged());
+		List<UserroleEntity> userroleList = foundUserrole.getContent();
+		Iterator<UserroleEntity> userroleIterator = userroleList.iterator();
+		List<FindUserByIdOutput> output = new ArrayList<>();
+
+		while (userroleIterator.hasNext()) {
+			output.add(userMapper.userEntityToFindUserByIdOutput(userroleIterator.next().getUser()));
 		}
 		return output;
 	}

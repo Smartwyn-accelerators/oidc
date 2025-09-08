@@ -1,37 +1,33 @@
 package com.fastcode.oidc.security;
 
 import com.fastcode.oidc.OIDCPropertiesConfiguration;
-import com.fastcode.oidc.domain.irepository.IJwtRepository;
-import com.fastcode.oidc.domain.model.JwtEntity;
+import com.fastcode.oidc.domain.core.authorization.user.IUserManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSVerifier;
-import com.nimbusds.jose.crypto.RSASSAVerifier;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jwt.SignedJWT;
 import com.fastcode.oidc.commons.error.ApiError;
 import com.fastcode.oidc.commons.error.ExceptionMessageConstants;
 import com.fastcode.oidc.commons.logging.AuthLoggingHelper;
 import io.jsonwebtoken.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
 import org.springframework.context.ApplicationContext;
-import com.fastcode.oidc.domain.core.authorization.user.IUserManager;
-
-import java.net.URL;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.PathMatcher;
 
 import java.text.ParseException;
 import java.util.*;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.stream.Collectors;
@@ -39,26 +35,33 @@ import java.util.stream.Collectors;
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
 	private OIDCPropertiesConfiguration environment;
-	private SecurityUtils securityUtils;
 	private IUserManager _userMgr;
-	private IJwtRepository jwtRepo;
+	private List<String> excludedPaths;
+	private PathMatcher pathMatcher;
 
-	public JWTAuthorizationFilter(AuthenticationManager authManager,ApplicationContext ctx) {
+	public JWTAuthorizationFilter(AuthenticationManager authManager, ApplicationContext ctx, List<String> excludedPaths) {
 		super(authManager);
+		this.excludedPaths = excludedPaths; // Save the excluded paths
 		this.environment = ctx.getBean(OIDCPropertiesConfiguration.class);
-		this.securityUtils = ctx.getBean(SecurityUtils.class);
 		this._userMgr = ctx.getBean(IUserManager.class);
-		this.jwtRepo = ctx.getBean(IJwtRepository.class);
+		this.pathMatcher = new AntPathMatcher();
 	}
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest req,
 			HttpServletResponse res,
 			FilterChain chain) throws IOException, ServletException {
-		String authenticationToken = securityUtils.getTokenFromCookies(req.getCookies()); 
-		String authorizationToken = req.getHeader(SecurityConstants.HEADER_STRING);
 
-		if (authorizationToken == null || authenticationToken == null || !authorizationToken.startsWith(SecurityConstants.TOKEN_PREFIX) || !authenticationToken.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+		String requestPath = req.getRequestURI();
+		boolean isExcluded = excludedPaths.stream().anyMatch(pattern -> pathMatcher.match(pattern, requestPath));
+		if (isExcluded) {
+			chain.doFilter(req, res);
+			return;
+		}
+
+		String authorizationToken = req.getHeader(environment.getAuthHeaderString());
+
+		if (authorizationToken == null || !authorizationToken.startsWith(environment.getAuthTokenPrefix())) {
 			chain.doFilter(req, res);
 			return;
 		}
@@ -98,6 +101,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 			res.setStatus(401);
 		}
 
+		res.setContentType(MediaType.APPLICATION_JSON_VALUE);
         OutputStream out = res.getOutputStream();
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.writeValue(out, apiError);
@@ -105,49 +109,28 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 	}
 	private CustomAuthenticationToken getAuthentication(HttpServletRequest request) throws JwtException, ParseException, IOException, JOSEException {
 
-		String authorizationToken = request.getHeader(SecurityConstants.HEADER_STRING);
-		String authenticationToken =securityUtils.getTokenFromCookies(request.getCookies());
-		// Check that the token is inactive in the JwtEntity table
-		JwtEntity jwt = jwtRepo.findByAuthorizationTokenAndAuthenticationToken(authorizationToken,authenticationToken);
+		String authorizationToken = request.getHeader(environment.getAuthHeaderString());
 
-		if(jwt == null) {
-			throw new JwtException("Token Does Not Exist");
-		}
-		Claims claims;
-
-		if (StringUtils.isNotEmpty(authenticationToken) && authenticationToken.startsWith(SecurityConstants.TOKEN_PREFIX)) {
-			try {
-				SignedJWT accessToken = SignedJWT.parse(authenticationToken.replace(SecurityConstants.TOKEN_PREFIX, ""));
-				String kid = accessToken.getHeader().getKeyID();
-				JWKSet jwks = JWKSet.load(new URL(this.environment.getOidcIssuerUri() + "/discovery/v2.0/keys"));
-				RSAKey jwk = (RSAKey) jwks.getKeyByKeyId(kid);
-				JWSVerifier verifier = new RSASSAVerifier(jwk);
-				if (accessToken.verify(verifier)) {
-					System.out.println("valid signature");
-				} else {
-					System.out.println("invalid signature");
-				}
-			}catch (Exception e){
-				throw e;
-			}
-		}
-
-		if (StringUtils.isNotEmpty(authorizationToken) && authorizationToken.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+		if (StringUtils.isNotEmpty(authorizationToken) && authorizationToken.startsWith(environment.getAuthTokenPrefix())) {
 			String email = null;
 			String tenant = null;
 			List<GrantedAuthority> authorities = null;
-			claims = Jwts.parser()
-					.setSigningKey(SecurityConstants.SECRET.getBytes())
-					.parseClaimsJws(authorizationToken.replace(SecurityConstants.TOKEN_PREFIX, ""))
-					.getBody();
+			
+			// Create secret key for JWT parsing
+			SecretKey key = Keys.hmacShaKeyFor(environment.getAuthTokenSecret().getBytes());
+			
+			Claims claims = Jwts.parser()
+					.verifyWith(key)
+					.build()
+					.parseSignedClaims(authorizationToken.replace(environment.getAuthTokenPrefix(), ""))
+					.getPayload();
 			email = claims.getSubject();
 			tenant = claims.get("tenant",String.class);
 			List<String> scopes = claims.get("scopes", List.class);
 			authorities = scopes.stream()
 					.map(authority -> new SimpleGrantedAuthority(authority))
 					.collect(Collectors.toList());
-
-
+//			_userMgr.findByEmailAddress(email) != null additional check if needed
 			if ((email != null) && StringUtils.isNotEmpty(email)) {
 				return new CustomAuthenticationToken(email,null,tenant, authorities);
 			}

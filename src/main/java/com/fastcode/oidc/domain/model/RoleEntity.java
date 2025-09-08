@@ -1,6 +1,6 @@
 package com.fastcode.oidc.domain.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "Role", schema = "sample")
+@Table(name = "Role")
 @Getter @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
@@ -46,7 +46,7 @@ public class RoleEntity extends AbstractEntity {
     private Long id;
 	
 	@Basic
-	@Column(name = "DisplayName", nullable = false, length = 128)
+    @Column(name = "display_name", nullable = false, length = 128)
     private String displayName;
 	
 	@Basic

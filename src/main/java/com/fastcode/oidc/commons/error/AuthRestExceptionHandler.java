@@ -1,6 +1,7 @@
 package com.fastcode.oidc.commons.error;
 
 import com.fastcode.oidc.commons.logging.AuthLoggingHelper;
+import io.jsonwebtoken.*;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -11,6 +12,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -22,8 +25,10 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
+import java.text.ParseException;
+import com.nimbusds.jose.JOSEException;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -42,7 +47,6 @@ public class AuthRestExceptionHandler extends ResponseEntityExceptionHandler {
 	 * @param request WebRequest
 	 * @return the ApiError object
 	 */
-	@Override
 	protected ResponseEntity<Object> handleMissingServletRequestParameter(
 			MissingServletRequestParameterException ex, HttpHeaders headers,
 			HttpStatus status, WebRequest request) {
@@ -61,7 +65,6 @@ public class AuthRestExceptionHandler extends ResponseEntityExceptionHandler {
 	 * @param request WebRequest
 	 * @return the ApiError object
 	 */
-	@Override
 	protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(
 			HttpMediaTypeNotSupportedException ex,
 			HttpHeaders headers,
@@ -86,7 +89,6 @@ public class AuthRestExceptionHandler extends ResponseEntityExceptionHandler {
 	 * @param request WebRequest
 	 * @return the ApiError object
 	 */
-	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(
 			MethodArgumentNotValidException ex,
 			HttpHeaders headers,
@@ -110,7 +112,6 @@ public class AuthRestExceptionHandler extends ResponseEntityExceptionHandler {
 	 * @param request WebRequest
 	 * @return the ApiError object
 	 */
-	@Override
 	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
 		logHelper.getLogger().error("An Exception Occurred:", ex);
 	//	ServletWebRequest servletWebRequest = (ServletWebRequest) request;
@@ -127,7 +128,6 @@ public class AuthRestExceptionHandler extends ResponseEntityExceptionHandler {
 	 * @param request WebRequest
 	 * @return the ApiError object
 	 */
-	@Override
 	protected ResponseEntity<Object> handleHttpMessageNotWritable(HttpMessageNotWritableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
 		logHelper.getLogger().error("An Exception Occurred:", ex);
 		String error = "Error writing JSON output";
@@ -143,7 +143,6 @@ public class AuthRestExceptionHandler extends ResponseEntityExceptionHandler {
 	 * @param request
 	 * @return
 	 */
-	@Override
 	protected ResponseEntity<Object> handleNoHandlerFoundException(
 			NoHandlerFoundException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
 		logHelper.getLogger().error("An Exception Occurred:", ex);
@@ -162,7 +161,6 @@ public class AuthRestExceptionHandler extends ResponseEntityExceptionHandler {
 	 * @param request WebRequest
 	 * @return the ApiError object
 	 */
-	@Override
 	protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(
 			HttpRequestMethodNotSupportedException ex,
 			HttpHeaders headers,
@@ -176,14 +174,14 @@ public class AuthRestExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	/**
-	 * Handles javax.validation.ConstraintViolationException. Thrown when @Validated fails.
+	 * Handles jakarta.validation.ConstraintViolationException. Thrown when @Validated fails.
 	 *
 	 * @param ex the ConstraintViolationException
 	 * @return the ApiError object
 	 */
-	@ExceptionHandler(javax.validation.ConstraintViolationException.class)
+	@ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
 	protected ResponseEntity<Object> handleConstraintViolation(
-			javax.validation.ConstraintViolationException ex) {
+			jakarta.validation.ConstraintViolationException ex) {
 		logHelper.getLogger().error("An Exception Occurred:", ex);
 		ApiError apiError = new ApiError(BAD_REQUEST);
 		apiError.setMessage("Validation error");
@@ -288,9 +286,6 @@ public class AuthRestExceptionHandler extends ResponseEntityExceptionHandler {
 
 	/**
 	 * Handle BadCredentialsException specifically.
-	 *
-	 * @param ex the BadCredentialsException
-	 * @return the ApiError object
 	 */
 	@ExceptionHandler(BadCredentialsException.class)
 	protected ResponseEntity<Object> handleBadCredentialsException(BadCredentialsException ex) {
@@ -300,6 +295,104 @@ public class AuthRestExceptionHandler extends ResponseEntityExceptionHandler {
 		apiError.setDebugMessage(ex.getLocalizedMessage());
 		return buildResponseEntity(apiError);
 	}
+
+	/**
+	 * Handle AccessDeniedException.
+	 */
+	@ExceptionHandler(AccessDeniedException.class)
+	protected ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
+		logHelper.getLogger().error("Access Denied Exception Occurred:", ex);
+		ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED);
+		apiError.setMessage(ex.getMessage());
+		apiError.setDebugMessage(ex.getLocalizedMessage());
+		return buildResponseEntity(apiError);
+	}
+
+	/**
+	 * Handle UsernameNotFoundException.
+	 */
+	@ExceptionHandler(UsernameNotFoundException.class)
+	protected ResponseEntity<Object> handleUsernameNotFoundException(UsernameNotFoundException ex, WebRequest request) {
+		logHelper.getLogger().error("Username Not Found Exception Occurred:", ex);
+		ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED);
+		apiError.setMessage(ex.getMessage());
+		apiError.setDebugMessage(ex.getLocalizedMessage());
+		return buildResponseEntity(apiError);
+	}
+
+	/**
+	 * Handle ExpiredJwtException.
+	 */
+	@ExceptionHandler(ExpiredJwtException.class)
+	protected ResponseEntity<Object> handleExpiredJwtException(ExpiredJwtException ex, WebRequest request) {
+		logHelper.getLogger().error("Expired JWT Exception Occurred:", ex);
+		ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED);
+		apiError.setMessage(ExceptionMessageConstants.TOKEN_EXPIRED);
+		apiError.setDebugMessage(ex.getLocalizedMessage());
+		return buildResponseEntity(apiError);
+	}
+
+	/**
+	 * Handle UnsupportedJwtException.
+	 */
+	@ExceptionHandler(UnsupportedJwtException.class)
+	protected ResponseEntity<Object> handleUnsupportedJwtException(UnsupportedJwtException ex, WebRequest request) {
+		logHelper.getLogger().error("Unsupported JWT Exception Occurred:", ex);
+		ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED);
+		apiError.setMessage(ExceptionMessageConstants.TOKEN_UNSUPPORTED);
+		apiError.setDebugMessage(ex.getLocalizedMessage());
+		return buildResponseEntity(apiError);
+	}
+
+	/**
+	 * Handle MalformedJwtException.
+	 */
+	@ExceptionHandler(MalformedJwtException.class)
+	protected ResponseEntity<Object> handleMalformedJwtException(MalformedJwtException ex, WebRequest request) {
+		logHelper.getLogger().error("Malformed JWT Exception Occurred:", ex);
+		ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED);
+		apiError.setMessage(ExceptionMessageConstants.TOKEN_MALFORMED);
+		apiError.setDebugMessage(ex.getLocalizedMessage());
+		return buildResponseEntity(apiError);
+	}
+
+	/**
+	 * Handle JwtException (replaces deprecated SignatureException).
+	 */
+	@ExceptionHandler(JwtException.class)
+	protected ResponseEntity<Object> handleJwtException(JwtException ex, WebRequest request) {
+		logHelper.getLogger().error("JWT Exception Occurred:", ex);
+		ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED);
+		apiError.setMessage(ExceptionMessageConstants.TOKEN_INCORRECT_SIGNATURE);
+		apiError.setDebugMessage(ex.getLocalizedMessage());
+		return buildResponseEntity(apiError);
+	}
+
+	/**
+	 * Handle ParseException.
+	 */
+	@ExceptionHandler(ParseException.class)
+	protected ResponseEntity<Object> handleParseException(ParseException ex, WebRequest request) {
+		logHelper.getLogger().error("Parse Exception Occurred:", ex);
+		ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED);
+		apiError.setMessage(ExceptionMessageConstants.TOKEN_INCORRECT_SIGNATURE);
+		apiError.setDebugMessage(ex.getLocalizedMessage());
+		return buildResponseEntity(apiError);
+	}
+
+	/**
+	 * Handle JOSEException.
+	 */
+	@ExceptionHandler(JOSEException.class)
+	protected ResponseEntity<Object> handleJOSEException(JOSEException ex, WebRequest request) {
+		logHelper.getLogger().error("JOSE Exception Occurred:", ex);
+		ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED);
+		apiError.setMessage(ExceptionMessageConstants.TOKEN_INCORRECT_SIGNATURE);
+		apiError.setDebugMessage(ex.getLocalizedMessage());
+		return buildResponseEntity(apiError);
+	}
+
+
 
 	private ResponseEntity<Object> buildResponseEntity(ApiError apiError) {
 		return new ResponseEntity<>(apiError, apiError.getStatus());

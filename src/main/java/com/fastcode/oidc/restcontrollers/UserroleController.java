@@ -10,7 +10,6 @@ import com.fastcode.oidc.commons.search.SearchCriteria;
 import com.fastcode.oidc.commons.search.SearchUtils;
 import com.fastcode.oidc.domain.model.UserEntity;
 import com.fastcode.oidc.domain.model.UserroleId;
-import com.fastcode.oidc.security.JWTAppService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -19,8 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.EntityNotFoundException;
-import javax.validation.Valid;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import java.util.Optional;
 
 @RestController
@@ -33,19 +32,14 @@ public class UserroleController {
     
     @Autowired
 	private IUserAppService  _userAppService;
-	 
-	@Autowired
- 	private JWTAppService _jwtAppService;
 
 	@Autowired
 	private OIDCPropertiesConfiguration env;
 	
-	 public UserroleController(IUserroleAppService userroleAppService, IUserAppService userAppService,
-			 JWTAppService jwtAppService) {
+	 public UserroleController(IUserroleAppService userroleAppService, IUserAppService userAppService) {
 		super();
 		this._userroleAppService = userroleAppService;
 		this._userAppService = userAppService;
-		this._jwtAppService = jwtAppService;
 	}
 
     @PreAuthorize("hasAnyAuthority('USERROLEENTITY_CREATE')")
@@ -56,7 +50,7 @@ public class UserroleController {
 		Optional.ofNullable(output).orElseThrow(() -> new EntityNotFoundException(String.format("No record found")));
 
 		FindUserByIdOutput foundUser =_userAppService.findById(output.getUserId());
-		_jwtAppService.deleteAllUserTokens(foundUser.getEmailAddress());
+//		_jwtAppService.deleteAllUserTokens(foundUser.getEmailAddress());
 	
 		return new ResponseEntity(output, HttpStatus.OK);
 	}
@@ -77,7 +71,7 @@ public class UserroleController {
 		_userroleAppService.delete(userroleid);
 		 
 	  	FindUserByIdOutput foundUser =_userAppService.findById(output.getUserId());
-		_jwtAppService.deleteAllUserTokens(foundUser.getEmailAddress());
+//		_jwtAppService.deleteAllUserTokens(foundUser.getEmailAddress());
     }
 	
 	// ------------ Update userrole ------------
@@ -93,7 +87,7 @@ public class UserroleController {
 		Optional.ofNullable(currentUserrole).orElseThrow(() -> new EntityNotFoundException(String.format("Unable to update. Userrole with id=%s not found.", id)));
 	
 		FindUserByIdOutput foundUser =_userAppService.findById(currentUserrole.getUserId());
-		_jwtAppService.deleteAllUserTokens(foundUser.getEmailAddress());
+//		_jwtAppService.deleteAllUserTokens(foundUser.getEmailAddress());
 		
 		userrole.setVersion(currentUserrole.getVersion());
 		return new ResponseEntity(_userroleAppService.update(userroleid,userrole), HttpStatus.OK);

@@ -1,6 +1,6 @@
 package com.fastcode.oidc.domain.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "Userpermission", schema = "sample")
+@Table(name = "Userpermission")
 @IdClass(UserpermissionId.class)
 @Getter @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -46,20 +46,20 @@ public class UserpermissionEntity extends AbstractEntity{
 
 	@Id
 	@EqualsAndHashCode.Include()
-	@Column(name = "permissionId", nullable = false)
+	@Column(name = "permission_id", nullable = false)
 	private Long permissionId;
 
 	@Id
 	@EqualsAndHashCode.Include()
-	@Column(name = "userId", nullable = false)
+	@Column(name = "user_id", nullable = false)
 	private Long userId;
 
 	@ManyToOne
-	@JoinColumn(name = "permissionId", insertable=false, updatable=false)
+	@JoinColumn(name = "permission_id", insertable=false, updatable=false)
 	private PermissionEntity permission;
 
 	@ManyToOne
-	@JoinColumn(name = "userId", insertable=false, updatable=false)
+	@JoinColumn(name = "user_id", insertable=false, updatable=false)
 	private UserEntity user;
 
 }

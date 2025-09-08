@@ -1,6 +1,6 @@
 package com.fastcode.oidc.domain.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

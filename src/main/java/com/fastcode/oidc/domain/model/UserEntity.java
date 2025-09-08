@@ -1,26 +1,26 @@
 package com.fastcode.oidc.domain.model;
 
-import org.hibernate.validator.constraints.Length;
+import jakarta.validation.constraints.Size;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "User", schema = "sample")
+@Table(name = "User")
 @Getter @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
-public class UserEntity extends AbstractEntity {
+public class 	UserEntity extends AbstractEntity {
 
 	@Id
 	@EqualsAndHashCode.Include()
@@ -29,30 +29,30 @@ public class UserEntity extends AbstractEntity {
 	private Long id;
 
 	@Basic
-	@Column(name = "EmailAddress", nullable = false, length = 256)
+	@Column(name = "first_name", nullable = false, length = 32)
+	@NotNull
+	@Size(max = 32, message = "The field must be less than 32 characters")
+	private String firstName;
+
+	@Basic
+	@Column(name = "last_name", nullable = false, length = 32)
+	@NotNull
+	@Size(max = 32, message = "The field must be less than 32 characters")
+	private String lastName;
+
+	@Basic
+	@Column(name = "email_address", nullable = false, length = 256)
 	@Email
 	@NotNull
-	@Length(max = 256, message = "The field must be less than 256 characters")
+	@Size(max = 256, message = "The field must be less than 256 characters")
 	private String emailAddress;
 
-	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL) 
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	private Set<UserpermissionEntity> userpermissionSet = new HashSet<UserpermissionEntity>();
 
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL) 
 	private Set<UserroleEntity> userroleSet = new HashSet<UserroleEntity>(); 
 
-	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL) 
-	private Set<TokenverificationEntity> tokenverificationSet = new HashSet<TokenverificationEntity>();
-	
-	public void addTokenVerification(TokenverificationEntity tokenVerification) {
-		tokenverificationSet.add(tokenVerification);
-		tokenVerification.setUser(this);
-	}
-
-	public void removeTokenVerificationEntity(TokenverificationEntity tokenVerification) {
-		tokenverificationSet.remove(tokenVerification);
-		tokenVerification.setUser(null);
-	}
 
 	public void addUserpermission(UserpermissionEntity userpermission) {
 		userpermissionSet.add(userpermission);

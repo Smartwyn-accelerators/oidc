@@ -10,7 +10,6 @@ import com.fastcode.oidc.commons.search.SearchCriteria;
 import com.fastcode.oidc.commons.search.SearchUtils;
 import com.fastcode.oidc.domain.model.UserEntity;
 import com.fastcode.oidc.domain.model.UserpermissionId;
-import com.fastcode.oidc.security.JWTAppService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -19,8 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.EntityNotFoundException;
-import javax.validation.Valid;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import java.util.Optional;
 
 @RestController
@@ -35,17 +34,12 @@ public class UserpermissionController {
 	private IUserAppService _userAppService;
 
 	@Autowired
-	private JWTAppService _jwtAppService;
-
-	@Autowired
 	private OIDCPropertiesConfiguration env;
 
-	public UserpermissionController(IUserpermissionAppService userpermissionAppService, IUserAppService userAppService,
-			JWTAppService jwtAppService) {
+	public UserpermissionController(IUserpermissionAppService userpermissionAppService, IUserAppService userAppService) {
 
 		this._userpermissionAppService = userpermissionAppService;
 		this._userAppService = userAppService;
-		this._jwtAppService = jwtAppService;
 	}
 
 	@PreAuthorize("hasAnyAuthority('USERPERMISSIONENTITY_CREATE')")
@@ -56,7 +50,7 @@ public class UserpermissionController {
 		Optional.ofNullable(output).orElseThrow(() -> new EntityNotFoundException(String.format("No record found")));
 
 		FindUserByIdOutput foundUser =_userAppService.findById(output.getUserId());
-		_jwtAppService.deleteAllUserTokens(foundUser.getEmailAddress());
+//		_jwtAppService.deleteAllUserTokens(foundUser.getEmailAddress());
 
 		return new ResponseEntity(output, HttpStatus.OK);
 	}
@@ -77,7 +71,7 @@ public class UserpermissionController {
 		_userpermissionAppService.delete(userpermissionId);
 
 		FindUserByIdOutput foundUser =_userAppService.findById(output.getUserId());
-		_jwtAppService.deleteAllUserTokens(foundUser.getEmailAddress());
+//		_jwtAppService.deleteAllUserTokens(foundUser.getEmailAddress());
 	}
 
 	// ------------ Update userpermission ------------
@@ -93,7 +87,7 @@ public class UserpermissionController {
 		Optional.ofNullable(currentUserpermission).orElseThrow(() -> new EntityNotFoundException(String.format("Unable to update. Userpermission with id=%s not found.", id)));
 
 		FindUserByIdOutput foundUser =_userAppService.findById(currentUserpermission.getUserId());
-		_jwtAppService.deleteAllUserTokens(foundUser.getEmailAddress());
+//		_jwtAppService.deleteAllUserTokens(foundUser.getEmailAddress());
 
 		userpermission.setVersion(currentUserpermission.getVersion());
 		return new ResponseEntity(_userpermissionAppService.update(userpermissionId,userpermission), HttpStatus.OK);

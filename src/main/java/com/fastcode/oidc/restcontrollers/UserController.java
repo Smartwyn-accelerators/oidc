@@ -12,7 +12,6 @@ import com.fastcode.oidc.commons.logging.AuthLoggingHelper;
 import com.fastcode.oidc.commons.search.SearchCriteria;
 import com.fastcode.oidc.commons.search.SearchUtils;
 import com.fastcode.oidc.domain.model.UserEntity;
-import com.fastcode.oidc.security.JWTAppService;
 import com.fastcode.oidc.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -23,9 +22,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityNotFoundException;
-import javax.validation.Valid;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,9 +47,6 @@ public class UserController {
 	private PasswordEncoder pEncoder;
 
 	@Autowired
-	private JWTAppService _jwtAppService;
-
-	@Autowired
 	private AuthLoggingHelper logHelper;
 
 	@Autowired
@@ -60,12 +56,11 @@ public class UserController {
 	private OIDCPropertiesConfiguration env;
 
 	public UserController(IUserAppService userAppService, IUserpermissionAppService userpermissionAppService,
-			IUserroleAppService userroleAppService, PasswordEncoder pEncoder, JWTAppService jwtAppService, AuthLoggingHelper logHelper) {
+			IUserroleAppService userroleAppService, PasswordEncoder pEncoder, AuthLoggingHelper logHelper) {
 		super();
 		this._userAppService = userAppService;
 		this._userpermissionAppService = userpermissionAppService;
 		this._userroleAppService = userroleAppService;
-		this._jwtAppService = jwtAppService;
 		this.pEncoder = pEncoder;
 		this.logHelper = logHelper;
 	}
@@ -191,7 +186,7 @@ public class UserController {
 		if (limit == null) { limit = env.getFastCodeLimitDefault(); }
 
 		if(sort == null || sort.isEmpty()) {
-			sort = Sort.by(Sort.Direction.ASC, "userName");
+			sort = Sort.by(Sort.Direction.ASC, "emailAddress");
 		}
 		Pageable Pageable = new OffsetBasedPageRequest(Integer.parseInt(offset), Integer.parseInt(limit), sort);
 		SearchCriteria searchCriteria = SearchUtils.generateSearchCriteriaObject(search);

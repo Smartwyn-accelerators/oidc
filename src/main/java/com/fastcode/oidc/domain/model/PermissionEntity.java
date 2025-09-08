@@ -1,6 +1,6 @@
 package com.fastcode.oidc.domain.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "Permission", schema = "sample")
+@Table(name = "Permission")
 @Getter @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
@@ -49,11 +49,11 @@ public class PermissionEntity extends AbstractEntity {
 	private String name;
 
 	@Basic
-	@Column(name = "displayName", nullable = false, length = 128)
+	@Column(name = "display_name", nullable = false, length = 128)
 	private String displayName;
 
 
-	@OneToMany(mappedBy = "permission", cascade = CascadeType.ALL) 
+	@OneToMany(mappedBy = "permission", cascade = CascadeType.ALL)
 	private Set<RolepermissionEntity> rolepermissionSet = new HashSet<RolepermissionEntity>(); 
 
 

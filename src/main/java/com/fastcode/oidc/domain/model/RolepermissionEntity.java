@@ -1,6 +1,6 @@
 package com.fastcode.oidc.domain.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import lombok.Setter;
 
 
 @Entity
-@Table(name = "Rolepermission", schema = "sample")
+@Table(name = "Rolepermission")
 @IdClass(RolepermissionId.class)
 @Getter @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -41,21 +41,22 @@ public class RolepermissionEntity extends AbstractEntity {
 //                		roleId .equals(other.getRoleId ());
 //    }
 
+
 	@Id
 	@EqualsAndHashCode.Include()
-	@Column(name = "permissionId", nullable = false)
+	@Column(name = "permission_id", nullable = false)
 	private Long permissionId;
 	
 	@Id
-	@Column(name = "roleId", nullable = false)
+	@Column(name = "role_id", nullable = false)
 	private Long roleId;
 
 	@ManyToOne
-	@JoinColumn(name = "permissionId", insertable=false, updatable=false)
+	@JoinColumn(name = "permission_id", insertable=false, updatable=false)
 	private PermissionEntity permission;
 
 	@ManyToOne
-	@JoinColumn(name = "roleId", insertable=false, updatable=false)
+	@JoinColumn(name = "role_id", insertable=false, updatable=false)
 	private RoleEntity role;
 
 	public RolepermissionEntity(Long permissionId, Long roleId) {

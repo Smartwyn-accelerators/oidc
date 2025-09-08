@@ -11,5 +11,4 @@ public class FindUserByIdOutput {
 
     private Long id;
     private String emailAddress;
-
 }

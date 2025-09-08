@@ -1,5 +1,6 @@
 package com.fastcode.oidc.application.userrole;
 
+import com.fastcode.oidc.application.user.dto.FindUserByIdOutput;
 import com.fastcode.oidc.application.userrole.dto.*;
 import com.fastcode.oidc.commons.search.SearchCriteria;
 import com.fastcode.oidc.commons.search.SearchFields;
@@ -24,6 +25,8 @@ public interface IUserroleAppService {
     public FindUserroleByIdOutput findById(UserroleId userroleId);
 
     public List<FindUserroleByIdOutput> find(SearchCriteria search, Pageable pageable) throws Exception;
+
+    public List<FindUserByIdOutput> findByRole(String role) throws Exception;
 
     public GetUserOutput getUser(UserroleId userroleId);
     

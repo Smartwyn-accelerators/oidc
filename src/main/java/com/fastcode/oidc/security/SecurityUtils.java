@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.Cookie;
+import jakarta.servlet.http.Cookie;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -87,12 +87,12 @@ public class SecurityUtils {
                 });
     }
 
-    public String getTokenFromCookies(Cookie[] cookies)
+    public String getTokenFromCookies(Cookie[] cookies, String cookieName)
     {
         if(cookies !=null) {
             for(Cookie c : cookies)
             {
-                if(c.getName().equals(SecurityConstants.HEADER_STRING_AUTHENTICATION)) {
+                if(c.getName().equals(cookieName)) {
                     return c.getValue();
                 }
             }

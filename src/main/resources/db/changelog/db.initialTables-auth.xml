@@ -12,6 +12,8 @@
             <column name="email_address" type="VARCHAR(256)">
                 <constraints nullable="false"/>
             </column>
+            <column name="first_name" type="VARCHAR(32)"/>
+            <column name="last_name" type="VARCHAR(32)"/>
         </createTable>
 
     </changeSet>
